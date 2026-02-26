@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-from app.models import CallData, CallOutcome, MeetingDetails, MeetingType
+from app.models import CallData, CallOutcome, CancelDetails, MeetingDetails, MeetingType
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +79,27 @@ def extract_meeting_details(call: CallData) -> Optional[MeetingDetails]:
         date_str=date_str,
         time_str=time_str,
         duration_minutes=duration_minutes,
+        call_summary=call.call_analysis.call_summary if call.call_analysis else None,
+        call_id=call.call_id,
+    )
+
+
+def extract_cancel_details(call: CallData) -> Optional[CancelDetails]:
+    """Extract caller info for cancellation or as the 'old meeting' in a reschedule."""
+    cad = {}
+    if call.call_analysis and call.call_analysis.custom_analysis_data:
+        cad = call.call_analysis.custom_analysis_data
+
+    caller_name = cad.get("caller_name", "Unknown Caller")
+    caller_phone = cad.get("caller_phone") or call.from_number or "Unknown"
+
+    if caller_name == "Unknown Caller" and caller_phone == "Unknown":
+        logger.error(f"No caller info found for cancel/reschedule on call {call.call_id}")
+        return None
+
+    return CancelDetails(
+        caller_name=caller_name,
+        caller_phone=caller_phone,
         call_summary=call.call_analysis.call_summary if call.call_analysis else None,
         call_id=call.call_id,
     )

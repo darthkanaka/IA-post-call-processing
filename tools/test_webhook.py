@@ -83,9 +83,65 @@ MOCK_INFO_ONLY = {
     },
 }
 
+MOCK_CANCEL = {
+    "event": "call_analyzed",
+    "call": {
+        "call_id": "test_call_003",
+        "agent_id": "agent_marina",
+        "call_type": "phone_call",
+        "from_number": "+18081234567",
+        "direction": "inbound",
+        "call_status": "ended",
+        "duration_ms": 90000,
+        "transcript": "Agent: Hello, this is Marina with Invisible Arts.\nUser: Hi, this is John Smith. I need to cancel my meeting.\nAgent: No problem, John. I'll take care of that for you.\nUser: Thanks.\nAgent: Your meeting has been cancelled. Is there anything else?\nUser: No, that's all.\nAgent: Thanks for calling, John. Have a great day.",
+        "call_analysis": {
+            "call_summary": "John Smith called to cancel his upcoming discovery meeting.",
+            "user_sentiment": "Neutral",
+            "call_successful": True,
+            "in_voicemail": False,
+            "custom_analysis_data": {
+                "call_outcome": "meeting_canceled",
+                "caller_name": "John Smith",
+                "caller_phone": "808-555-1234",
+                "meeting_type": "",
+                "meeting_datetime": "",
+            },
+        },
+    },
+}
+
+MOCK_RESCHEDULE = {
+    "event": "call_analyzed",
+    "call": {
+        "call_id": "test_call_004",
+        "agent_id": "agent_marina",
+        "call_type": "phone_call",
+        "from_number": "+18081234567",
+        "direction": "inbound",
+        "call_status": "ended",
+        "duration_ms": 180000,
+        "transcript": "Agent: Hello, this is Marina with Invisible Arts.\nUser: Hi, this is John Smith. I need to reschedule my meeting to Thursday.\nAgent: Sure, let me check what's available on Thursday.\nAgent: I have Thursday, March 5th at 1 PM. Does that work?\nUser: Perfect.\nAgent: You're all set for Thursday, March 5th at 1 PM. See you then, John.",
+        "call_analysis": {
+            "call_summary": "John Smith called to reschedule his discovery meeting from Tuesday to Thursday March 5th at 1 PM.",
+            "user_sentiment": "Positive",
+            "call_successful": True,
+            "in_voicemail": False,
+            "custom_analysis_data": {
+                "call_outcome": "meeting_rescheduled",
+                "caller_name": "John Smith",
+                "caller_phone": "808-555-1234",
+                "meeting_type": "video",
+                "meeting_datetime": "2026-03-05 13:00",
+            },
+        },
+    },
+}
+
 SCENARIOS = {
     "meeting": MOCK_MEETING_BOOKED,
     "info": MOCK_INFO_ONLY,
+    "cancel": MOCK_CANCEL,
+    "reschedule": MOCK_RESCHEDULE,
 }
 
 

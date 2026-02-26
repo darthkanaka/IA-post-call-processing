@@ -11,6 +11,8 @@ class WebhookEventType(str, Enum):
 
 class CallOutcome(str, Enum):
     MEETING_BOOKED = "meeting_booked"
+    MEETING_CANCELLED = "meeting_canceled"
+    MEETING_RESCHEDULED = "meeting_rescheduled"
     CALLBACK_REQUESTED = "callback_requested"
     INFO_ONLY = "info_only"
     NO_CONVERSATION = "no_conversation"
@@ -66,5 +68,13 @@ class MeetingDetails(BaseModel):
     date_str: str          # e.g. "2026-03-03"
     time_str: str          # e.g. "10:00"
     duration_minutes: int = 60  # Slots are 1 hour (10-11 or 1-2)
+    call_summary: Optional[str] = None
+    call_id: str
+
+
+class CancelDetails(BaseModel):
+    """Extracted details for cancelling an existing meeting."""
+    caller_name: str
+    caller_phone: str
     call_summary: Optional[str] = None
     call_id: str

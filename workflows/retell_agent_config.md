@@ -20,8 +20,8 @@ Navigate to the post-call analysis configuration and create these 5 custom field
 #### Field 1: call_outcome
 - **Name**: `call_outcome`
 - **Type**: Selector
-- **Options**: `meeting_booked`, `callback_requested`, `info_only`
-- **Description/Prompt**: "Classify the outcome of this call. Use 'meeting_booked' if the caller confirmed an appointment, 'callback_requested' if they wanted someone to call them back, or 'info_only' if they just asked questions."
+- **Options**: `meeting_booked`, `meeting_canceled`, `meeting_rescheduled`, `callback_requested`, `info_only`
+- **Description/Prompt**: "Classify the outcome of this call. Use 'meeting_booked' if the caller confirmed a new appointment, 'meeting_canceled' if they canceled an existing appointment, 'meeting_rescheduled' if they changed an existing appointment to a new time, 'callback_requested' if they wanted someone to call them back, or 'info_only' if they just asked questions."
 
 #### Field 2: caller_name
 - **Name**: `caller_name`
@@ -42,13 +42,14 @@ Navigate to the post-call analysis configuration and create these 5 custom field
 #### Field 5: meeting_datetime
 - **Name**: `meeting_datetime`
 - **Type**: Text
-- **Description/Prompt**: "Extract the exact date and time the caller chose for their discovery meeting. Format as YYYY-MM-DD HH:MM in 24-hour time. For example, March 3rd at 10 AM should be '2026-03-03 10:00'. Leave empty if no meeting was booked."
+- **Description/Prompt**: "Extract the exact date and time the caller chose for their discovery meeting. For rescheduled meetings, use the NEW time. Format as YYYY-MM-DD HH:MM in 24-hour time. For example, March 3rd at 10 AM should be '2026-03-03 10:00'. Leave empty if no meeting was booked or if the call was a cancellation."
 
 ### 4. Verify
-Make a test call to Marina, book a meeting, and check:
-1. Railway logs show the webhook was received
-2. `custom_analysis_data` contains all 5 fields
-3. A calendar event appears at the correct time
+Make test calls to Marina and check:
+1. **Book**: Call and book a meeting → calendar event appears at correct time
+2. **Reschedule**: Call and reschedule → old event deleted, new event created at new time
+3. **Cancel**: Call and cancel → event deleted from calendar
+4. Check Railway logs to confirm webhook was received and `custom_analysis_data` contains all fields
 
 ## Notes
 - These fields are populated by Retell's LLM during its standard post-call analysis — no additional API cost

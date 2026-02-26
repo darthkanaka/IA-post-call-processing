@@ -1,7 +1,7 @@
 # Post-Call Processing Workflow
 
 ## Objective
-Process Retell AI `call_analyzed` webhook events and create Google Calendar events for booked discovery meetings.
+Process Retell AI `call_analyzed` webhook events to create, reschedule, or cancel Google Calendar events for discovery meetings.
 
 ## Trigger
 `POST /webhook/retell` — fired by Retell when call analysis is complete.
@@ -12,11 +12,13 @@ Process Retell AI `call_analyzed` webhook events and create Google Calendar even
 2. **Verify signature** — Check `x-retell-signature` header against `RETELL_API_KEY` (skipped in development)
 3. **Parse payload** — Validate against `WebhookPayload` Pydantic model
 4. **Determine outcome** — Read `custom_analysis_data.call_outcome` from Retell's post-call analysis:
-   - `meeting_booked` → proceed to calendar creation
+   - `meeting_booked` → create new calendar event
+   - `meeting_canceled` → find and delete existing calendar event
+   - `meeting_rescheduled` → find and delete existing event, create new one at updated time
    - `callback_requested` → log only (future: handler)
    - `info_only` → log only
-5. **Extract meeting details** — Pull caller name, phone, meeting type, datetime from `custom_analysis_data`
-6. **Create calendar event** — 1-hour event in HST with client details in description
+5. **Extract details** — Pull caller name, phone, meeting type, datetime from `custom_analysis_data`
+6. **Execute action** — Create, delete, or reschedule calendar event
 7. **Return 200** — Acknowledge receipt to Retell
 
 ## Tools Used
@@ -43,6 +45,8 @@ Process Retell AI `call_analyzed` webhook events and create Google Calendar even
 - **Expired Google token**: Auto-refreshes using the refresh token
 - **Short/failed calls**: Classified as `no_conversation`, no action taken
 - **Duplicate webhooks**: Retell may retry on non-200 responses; calendar events include `call_id` in description for identification
+- **Cancel with no matching event**: Logs a warning but returns 200 (caller may have already cancelled via other means)
+- **Reschedule with no existing event**: Logs a warning but still creates the new event at the updated time
 
 ## Known Slot Times
 Discovery meetings are always 1 hour:
@@ -51,8 +55,8 @@ Discovery meetings are always 1 hour:
 
 ## Retell Custom Analysis Fields Required
 These must be configured in the Retell dashboard (see `retell_agent_config.md`):
-- `call_outcome` (selector)
+- `call_outcome` (selector: meeting_booked, meeting_canceled, meeting_rescheduled, callback_requested, info_only)
 - `caller_name` (text)
 - `caller_phone` (text)
-- `meeting_type` (selector)
-- `meeting_datetime` (text)
+- `meeting_type` (selector: video, phone, in-person)
+- `meeting_datetime` (text: YYYY-MM-DD HH:MM format)

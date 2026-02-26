@@ -7,8 +7,9 @@ from retell import Retell
 
 from app.config import settings
 from app.models import WebhookPayload, WebhookEventType
-from app.services.call_parser import parse_call_outcome, extract_meeting_details
-from app.handlers.meeting_handler import handle_meeting_booked
+from app.models import CallOutcome
+from app.services.call_parser import parse_call_outcome, extract_meeting_details, extract_cancel_details
+from app.handlers.meeting_handler import handle_meeting_booked, handle_meeting_cancelled, handle_meeting_rescheduled
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -43,15 +44,26 @@ async def handle_webhook(request: Request):
         outcome = parse_call_outcome(payload.call)
         logger.info(f"Call outcome: {outcome.value} for {payload.call.call_id}")
 
-        if outcome == outcome.MEETING_BOOKED:
+        if outcome == CallOutcome.MEETING_BOOKED:
             meeting = extract_meeting_details(payload.call)
             if meeting:
                 await handle_meeting_booked(meeting)
             else:
                 logger.error(f"Could not extract meeting details from call {payload.call.call_id}")
 
-        # Future handlers:
-        # if outcome == CallOutcome.CALLBACK_REQUESTED:
-        #     await handle_callback_requested(payload.call)
+        elif outcome == CallOutcome.MEETING_CANCELLED:
+            cancel = extract_cancel_details(payload.call)
+            if cancel:
+                await handle_meeting_cancelled(cancel)
+            else:
+                logger.error(f"Could not extract cancel details from call {payload.call.call_id}")
+
+        elif outcome == CallOutcome.MEETING_RESCHEDULED:
+            cancel = extract_cancel_details(payload.call)
+            meeting = extract_meeting_details(payload.call)
+            if cancel and meeting:
+                await handle_meeting_rescheduled(cancel, meeting)
+            else:
+                logger.error(f"Could not extract reschedule details from call {payload.call.call_id}")
 
     return JSONResponse(status_code=200, content={"received": True})
