@@ -1,0 +1,8 @@
+.env
+token.json
+Credentials.json
+__pycache__/
+*.pyc
+.tmp/
+.venv/
+.claude/
