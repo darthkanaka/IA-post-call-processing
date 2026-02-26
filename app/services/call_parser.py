@@ -41,7 +41,8 @@ def extract_meeting_details(call: CallData) -> Optional[MeetingDetails]:
         cad = call.call_analysis.custom_analysis_data
 
     caller_name = cad.get("caller_name", "Unknown Caller")
-    caller_phone = cad.get("caller_phone") or call.from_number or "Unknown"
+    # Prefer from_number (actual caller ID) over LLM-extracted phone
+    caller_phone = call.from_number or cad.get("caller_phone") or "Unknown"
     meeting_type_str = cad.get("meeting_type", "phone")
     meeting_datetime_str = cad.get("meeting_datetime", "")
 
@@ -91,7 +92,7 @@ def extract_cancel_details(call: CallData) -> Optional[CancelDetails]:
         cad = call.call_analysis.custom_analysis_data
 
     caller_name = cad.get("caller_name", "Unknown Caller")
-    caller_phone = cad.get("caller_phone") or call.from_number or "Unknown"
+    caller_phone = call.from_number or cad.get("caller_phone") or "Unknown"
 
     if caller_name == "Unknown Caller" and caller_phone == "Unknown":
         logger.error(f"No caller info found for cancel/reschedule on call {call.call_id}")
